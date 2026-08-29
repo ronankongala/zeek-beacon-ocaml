@@ -7,6 +7,8 @@
 [![Python](https://img.shields.io/badge/Python-3.12-green)](https://python.org)
 [![Platform](https://img.shields.io/badge/Platform-REMnux%20Ubuntu%2024.04-purple)](https://remnux.org)
 
+**Repository:** [github.com/ronankongala/zeek-network-forensics-lab](https://github.com/ronankongala/zeek-network-forensics-lab)
+
 ---
 
 ## Overview
@@ -25,12 +27,12 @@ The analysis confirmed 85.239.53.219 as the primary C2 server with a mean beacon
 | Beacon Score (RITA) | 0.504 |
 | RITA Modifier | `rare_signature:SSLoad/1.1` |
 | Total C2 Connections | 11 |
-| Mean Beacon Interval | 477 seconds (~8 minutes) |
-| Total C2 Duration | 5,087 seconds (~84 minutes) |
+| Mean Beacon Interval | 477 seconds (~8 minutes), 35% jitter |
+| Total C2 Connection Time | 5,087 seconds summed across 11 connections (beacon window spans 4,775 seconds start to start; long sessions overlap short ones) |
 | Victim Host | 10.4.18.169 |
 | DNS Queries | 73 total |
 | HTTP Requests | 273 total |
-| Zeek Logs Generated | 17 files (220KB) |
+| Zeek Logs Generated | 16 files (220KB) |
 
 ---
 
@@ -63,24 +65,10 @@ The analysis confirmed 85.239.53.219 as the primary C2 server with a mean beacon
 
 ```
 zeek-network-forensics-lab/
-├── pcaps/
-│   └── 2024-04-18-SSLoad-with-follow-up-Cobalt-Strike-DLL.pcap
-├── zeek-logs/
-│   ├── conn.log
-│   ├── dns.log
-│   ├── http.log
-│   ├── ssl.log
-│   ├── files.log
-│   ├── kerberos.log
-│   ├── ldap.log
-│   └── ...
 ├── notebooks/
 │   ├── notebook1_conn_analysis.ipynb
 │   ├── notebook2_dns_analysis.ipynb
-│   ├── notebook3_beacon_intervals.ipynb
-│   ├── conn_duration_top10.png
-│   ├── dns_top15.png
-│   └── beacon_intervals.png
+│   └── notebook3_beacon_intervals.ipynb
 ├── phase-6-report/
 │   └── CASE-18_Network_Forensics_Investigation_Report.pdf
 ├── screenshots/
@@ -92,10 +80,11 @@ zeek-network-forensics-lab/
 │   ├── 06_rita_top_beacons.png
 │   ├── 07_notebook1_conn_analysis.png
 │   ├── 08_notebook2_dns_analysis.png
-│   ├── 09_notebook3_beacon_intervals.png
-│   └── 10_report_cover_page.png
+│   └── 09_notebook3_beacon_intervals.png
 └── README.md
 ```
+
+The PCAP and the 16 Zeek logs it produces are not committed. The PCAP is a live malware sample and is redistributed under Malware Traffic Analysis terms, so pull it from the PCAP Source link above and regenerate the logs with the Phase 3 command. Every notebook reads from `/home/remnux/case18-zeek-lab/zeek-logs/`; adjust `LOG_PATH` in the first cell if your paths differ. Notebook charts are saved as committed cell outputs and render inline on GitHub without a rerun.
 
 ---
 
@@ -146,15 +135,17 @@ cd ~/case18-zeek-lab/zeek-logs
 ls -lh
 ```
 
-Zeek generated 17 structured log files. Key logs for C2 detection:
+Zeek generated 16 structured log files totaling 220KB. Key logs for C2 detection:
 
 - `conn.log` (27K) -- all connections with duration, bytes, state
 - `http.log` (81K) -- 273 HTTP requests including SSLoad callbacks
 - `dns.log` (19K) -- 73 DNS queries including dead drop domains
 - `ssl.log` (12K) -- TLS sessions including Cobalt Strike HTTPS beacon
-- `kerberos.log` + `ldap.log` -- post-exploitation AD enumeration
+- `kerberos.log` (2.1K) + `ldap.log` (2.8K) + `ldap_search.log` (4.7K) -- post-exploitation AD activity against partridge-dc.partridgecliff.com
 
-![SS03 -- 17 Zeek log files generated from PCAP](screenshots/03_zeek_logs_generated.png)
+Full set: conn, dce_rpc, dns, files, http, kerberos, ldap, ldap_search, ocsp, packet_filter, pe, smb_files, smb_mapping, ssl, weird, x509.
+
+![SS03 -- 16 Zeek log files generated from PCAP](screenshots/03_zeek_logs_generated.png)
 
 Sorting conn.log by duration immediately surfaces the C2 server:
 
@@ -185,6 +176,8 @@ Top beacons ranked by score:
 | api.openweathermap.org | 0.682 | 9 | Dead drop resolver |
 | 85.239.53.219 | **0.504** | **11** | **Primary C2 -- SSLoad/1.1** |
 
+RITA ranked t.me and api.openweathermap.org higher on raw score (0.682) and rated all three Low severity, so score alone does not name the primary C2. 85.239.53.219 takes that call on three other pieces of evidence: RITA auto-tagged it `rare_signature:SSLoad/1.1` from the malware's own HTTP user agent, it carried 2,164,635 bytes against 12,013 bytes for api.openweathermap.org, and it holds 5,087 seconds of connection time against a handful of short polls. The two higher-scoring domains score well because 9 evenly spaced DNS lookups are trivially regular, which is exactly the false positive pattern a beacon score produces on low-volume, legitimate-looking destinations.
+
 ![SS06 -- RITA top beacons ranked by score, 85.239.53.219 tagged rare_signature:SSLoad/1.1](screenshots/06_rita_top_beacons.png)
 
 ---
@@ -193,15 +186,15 @@ Top beacons ranked by score:
 
 **Notebook 1 -- conn.log analysis**
 
-Parsed conn.log with pandas, identified top 15 longest connections, flagged C2 candidates by long duration + low bytes + external IP pattern.
+Parsed conn.log with pandas across 199 connections to 39 destination IPs, identified the top 15 longest connections, flagged C2 candidates by long duration + low bytes + external IP pattern. The filter returned 19 candidates, of which two are 85.239.53.219.
 
-![SS07 -- Notebook 1: conn.log duration chart -- 85.239.53.219:80 clear outlier at 32 minutes](screenshots/07_notebook1_conn_analysis.png)
+![SS07 -- Notebook 1: conn.log duration chart -- 85.239.53.219:80 clear outlier at 33.2 minutes](screenshots/07_notebook1_conn_analysis.png)
 
 ---
 
 **Notebook 2 -- DNS analysis**
 
-Parsed dns.log, counted query frequency per domain. wpad.partridgecliff.com top queried (WPAD probe). api.openweathermap.org and t.me flagged as high-frequency external queries.
+Parsed dns.log: 73 queries across 24 unique domains. wpad.partridgecliff.com top queried at 17 lookups (WPAD probe). api.openweathermap.org and t.me flagged at 9 queries each, above the 5-query threshold and ahead of login.microsoftonline.com at 7.
 
 ![SS08 -- Notebook 2: Top 15 DNS queries bar chart](screenshots/08_notebook2_dns_analysis.png)
 
@@ -209,7 +202,7 @@ Parsed dns.log, counted query frequency per domain. wpad.partridgecliff.com top 
 
 **Notebook 3 -- Beacon interval visualization**
 
-Isolated all 11 connections to 85.239.53.219, computed inter-arrival intervals. Mean: 477s, Std dev: ~119s, Jitter: ~25% -- consistent with a configured Cobalt Strike sleep timer.
+Isolated all 11 connections to 85.239.53.219, computed inter-arrival intervals across the 10 resulting gaps. Mean: 477.5s, Median: 586.4s, Std dev: 169.2s, Min: 165.0s, Max: 606.9s, Jitter ratio: 35.4% -- consistent with a Cobalt Strike sleep timer configured near 600s with jitter applied. Six of the ten intervals fall between 579s and 607s, clustering just under a 10-minute sleep; the four short intervals (165s to 430s) are the jitter subtracting from that ceiling, which is why the median sits well above the mean.
 
 ![SS09 -- Notebook 3: C2 beacon timeline and interval regularity chart](screenshots/09_notebook3_beacon_intervals.png)
 
@@ -219,7 +212,7 @@ Isolated all 11 connections to 85.239.53.219, computed inter-arrival intervals. 
 
 Full PDF report mapping all findings to MITRE ATT&CK, with IOC table, Sigma detection rules, and network control recommendations.
 
-![SS10 -- Investigation report cover page](screenshots/10_report_cover_page.png)
+**[Read the report: CASE-18_Network_Forensics_Investigation_Report.pdf](phase-6-report/CASE-18_Network_Forensics_Investigation_Report.pdf)**
 
 ---
 
@@ -228,11 +221,11 @@ Full PDF report mapping all findings to MITRE ATT&CK, with IOC table, Sigma dete
 | Technique | Name | Evidence |
 |---|---|---|
 | T1071 | Application Layer Protocol | SSLoad C2 over HTTP port 80; 273 HTTP requests |
-| T1071.004 | DNS C2 | High-frequency queries to api.openweathermap.org and t.me |
+| T1071.001 | Application Layer Protocol: Web Protocols | Cobalt Strike HTTPS beacon in ssl.log (12K of TLS sessions) |
+| T1071.004 | Application Layer Protocol: DNS | 9 queries each to api.openweathermap.org and t.me |
 | T1008 | Fallback Channels | t.me and api.openweathermap.org as parallel C2 channels |
-| T1095 | Non-Application Layer Protocol | Cobalt Strike HTTPS beacon in ssl.log |
-| T1557 | Adversary-in-the-Middle | WPAD probe for proxy interception |
-| T1018 | Remote System Discovery | Domain controller DNS lookup -- AD enumeration |
+| T1557.001 | LLMNR/NBT-NS Poisoning and SMB Relay | 17 wpad.partridgecliff.com lookups -- WPAD proxy interception surface |
+| T1018 | Remote System Discovery | 2 lookups for partridge-dc.partridgecliff.com plus ldap_search.log activity |
 
 ---
 
@@ -248,8 +241,8 @@ Full PDF report mapping all findings to MITRE ATT&CK, with IOC table, Sigma dete
 | Domain | partridge-dc.partridgecliff.com | Domain controller -- AD enumeration |
 | User Agent | SSLoad/1.1 | SSLoad malware HTTP user agent |
 | Port | 80/tcp | Primary C2 port |
-| Port | 445/tcp | SMB lateral movement to 10.4.18.4 |
-| Beacon Interval | 477 seconds | Cobalt Strike sleep timer |
+| Port | 445/tcp | SMB session to 10.4.18.4 -- 212s, 30.9KB, conn_state S1 |
+| Beacon Interval | 477 seconds mean, 35.4% jitter | Cobalt Strike sleep timer |
 
 ---
 
@@ -314,6 +307,8 @@ tags:
 - [Zeek Network Security Monitor](https://zeek.org)
 - [MITRE ATT&CK T1071](https://attack.mitre.org/techniques/T1071/)
 - [MITRE ATT&CK T1008](https://attack.mitre.org/techniques/T1008/)
+- [MITRE ATT&CK T1557.001](https://attack.mitre.org/techniques/T1557/001/)
+- [MITRE ATT&CK T1018](https://attack.mitre.org/techniques/T1018/)
 
 ---
 
