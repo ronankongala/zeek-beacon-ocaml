@@ -1,4 +1,4 @@
-# CASE-18: Zeek Network Forensics + Beacon Detection
+# CASE-17: Zeek Network Forensics + Beacon Detection
 
 **Real-world C2 beacon detection using Zeek 8.2.1, RITA v5.1.2, and Jupyter threat hunting notebooks against a live SSLoad + Cobalt Strike PCAP.**
 
@@ -7,7 +7,7 @@
 [![Python](https://img.shields.io/badge/Python-3.12-green)](https://python.org)
 [![Platform](https://img.shields.io/badge/Platform-REMnux%20Ubuntu%2024.04-purple)](https://remnux.org)
 
-**Repository:** [github.com/ronankongala/zeek-network-forensics-lab](https://github.com/ronankongala/zeek-network-forensics-lab)
+**Repository:** [github.com/ronankongala/zeek-beacon-ocaml](https://github.com/ronankongala/zeek-beacon-ocaml)
 
 ---
 
@@ -64,7 +64,7 @@ The analysis confirmed 85.239.53.219 as the primary C2 server with a mean beacon
 ## Repository Structure
 
 ```
-zeek-network-forensics-lab/
+zeek-beacon-ocaml/
 ├── notebooks/
 │   ├── notebook1_conn_analysis.ipynb
 │   ├── notebook2_dns_analysis.ipynb
