@@ -6,19 +6,29 @@
 
 Reads a Zeek `conn.log`, groups connections by source IP, computes inter-arrival interval variance for each IP, and flags low-variance periodic senders as beacon candidates, the same signal RITA uses to identify C2 beaconing. Beacon candidates are shown first in the output, sorted by ascending variance (most suspicious first); all other scored IPs follow for context.
 
-![Detector output: 10.0.0.5 flagged as a beacon candidate at 477.1s mean interval, variance 1.84](docs/screenshots/01-detector-output.png)
+![Detector output: 10.0.0.5 flagged as a beacon candidate at 477.1s mean interval, variance 1.84](docs/screenshots/03-beacon-output.png)
 
 Of the 16 parsed rows, 3 source IPs clear the 5-connection minimum and get scored.
 Only `10.0.0.5` lands under the 5.0 variance threshold, at 1.84.
 
 ### The signal it keys on
 
-`10.0.0.5` calls back to `45.33.32.156:443` six times, with gaps of 475.1s,
-479.1s, 477.9s, 477.1s and 476.3s. That is a 477.1s mean with only 4.0s between
-the shortest and longest gap. The two noisy hosts sit at variance 890.39 and 312.11,
-178x and 62x above the 5.0 threshold.
+`10.0.0.5` calls back to `45.33.32.156:443` six times. Pulling just the timestamp,
+source, destination and port columns out of the log shows why it scores the way it does:
 
-![Six callbacks from 10.0.0.5 to 45.33.32.156:443, spaced 475-479 seconds apart](docs/screenshots/02-beacon-intervals.png)
+```bash
+$ grep 10.0.0.5 sample_conn.log | cut -f1,3,5,6
+1705276800.000000   10.0.0.5   45.33.32.156   443
+1705277275.100000   10.0.0.5   45.33.32.156   443     +475.1s
+1705277754.200000   10.0.0.5   45.33.32.156   443     +479.1s
+1705278232.080000   10.0.0.5   45.33.32.156   443     +477.9s
+1705278709.180000   10.0.0.5   45.33.32.156   443     +477.1s
+1705279185.500000   10.0.0.5   45.33.32.156   443     +476.3s
+```
+
+A 477.1s mean with only 4.0s between the shortest and longest gap. The two noisy
+hosts sit at variance 890.39 and 312.11, which is 178x and 62x above the 5.0
+threshold.
 
 ## Project structure
 
@@ -51,6 +61,35 @@ dune build
 
 No output from `dune build` means success. The binary is at
 `_build/default/beacon.exe` (dune uses `.exe` on all platforms).
+
+### Building on Windows
+
+The first build failed. `dune` found the OCaml compiler but not the C toolchain
+it shells out to for assembly, so the compile got as far as generating a `.s`
+file and then died:
+
+![dune build failing with x86_64-w64-mingw32-gcc not recognized, followed by an assembler error](docs/screenshots/01-dune-build-error.png)
+
+```
+'x86_64-w64-mingw32-gcc' is not recognized as an internal or external command
+Error: Assembler error, input left in file ...build_4bd97b_dune/...e.s
+```
+
+The gcc that opam installs lives inside opam's own Cygwin root, which is not on
+the PowerShell `PATH`. Adding those two directories, then re-importing the opam
+environment, fixes it:
+
+```powershell
+$env:PATH = "$env:USERPROFILE\AppData\Local\opam\.cygwin\root\bin;" +
+            "$env:USERPROFILE\AppData\Local\opam\.cygwin\root\usr\bin;" + $env:PATH
+(& "$env:USERPROFILE\Downloads\opam.exe" env --switch=default) -split '\r?\n' |
+    ForEach-Object { Invoke-Expression $_ }
+dune build
+```
+
+![dune build completing silently after the PATH fix](docs/screenshots/02-dune-build-success.png)
+
+Silent return, which is what a successful `dune build` looks like.
 
 ## Running
 
