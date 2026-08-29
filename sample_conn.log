@@ -1,0 +1,25 @@
+#separator \x09
+#set_separator ,
+#empty_field (empty)
+#unset_field -
+#path conn
+#open 2024-01-14-20-00-00
+#fields	ts	uid	id.orig_h	id.orig_p	id.resp_h	id.resp_p	proto	service	duration	orig_bytes	resp_bytes	conn_state	local_orig	local_resp	missed_bytes	history	orig_pkts	orig_ip_bytes	resp_pkts	resp_ip_bytes	tunnel_parents
+#types	float	string	addr	port	addr	port	enum	string	interval	count	count	string	bool	bool	count	string	count	count	count	count	set[string]
+1705276800.000000	CsKFcD4nLPW3VlNK	10.0.0.5	54800	45.33.32.156	443	tcp	ssl	0.001831	140	480	SF	-	-	0	ShADadfFr	4	476	5	776	-
+1705276850.000000	CbFh2n1JkLm3oPqR	172.16.0.42	41200	203.0.113.5	8080	tcp	http	0.003124	210	612	SF	-	-	0	ShADadfFr	3	378	4	780	-
+1705276900.000000	CaEg1m0IjKl2nOpQ	10.1.2.3	62100	198.51.100.9	443	tcp	ssl	0.002417	180	560	SF	-	-	0	ShADadfFr	4	464	5	820	-
+1705277076.000000	CdGi3o2KlMn4pQrS	172.16.0.42	41201	203.0.113.5	8080	tcp	http	0.003124	210	612	SF	-	-	0	ShADadfFr	3	378	4	780	-
+1705277165.000000	CbFh2n1JkLm3oPqR2	10.1.2.3	62101	198.51.100.9	443	tcp	ssl	0.002417	180	560	SF	-	-	0	ShADadfFr	4	464	5	820	-
+1705277275.100000	CWxP9s1tAqH2mZYd	10.0.0.5	54801	45.33.32.156	443	tcp	ssl	0.001831	140	480	SF	-	-	0	ShADadfFr	4	476	5	776	-
+1705277347.100000	CeHj4p3LmNo5qRsT	172.16.0.42	41202	203.0.113.5	8080	tcp	http	0.003124	210	612	SF	-	-	0	ShADadfFr	3	378	4	780	-
+1705277511.180000	CcGi3o2KlMn4pQrS2	10.1.2.3	62102	198.51.100.9	443	tcp	ssl	0.002417	180	560	SF	-	-	0	ShADadfFr	4	464	5	820	-
+1705277609.110000	CfIk5q4MnOp6rStU	172.16.0.42	41203	203.0.113.5	8080	tcp	http	0.003124	210	612	SF	-	-	0	ShADadfFr	3	378	4	780	-
+1705277754.200000	CrNb8v2KpQFe5jLm	10.0.0.5	54802	45.33.32.156	443	tcp	ssl	0.001831	140	480	SF	-	-	0	ShADadfFr	4	476	5	776	-
+1705277797.180000	CdHj4p3LmNo5qRsT2	10.1.2.3	62103	198.51.100.9	443	tcp	ssl	0.002417	180	560	SF	-	-	0	ShADadfFr	4	464	5	820	-
+1705277850.000000	CgJl6r5NoPq7sTuV	172.16.0.42	41204	203.0.113.5	8080	tcp	http	0.003124	210	612	SF	-	-	0	ShADadfFr	3	378	4	780	-
+1705278100.000000	CeIk5q4MnOp6rStU2	10.1.2.3	62104	198.51.100.9	443	tcp	ssl	0.002417	180	560	SF	-	-	0	ShADadfFr	4	464	5	820	-
+1705278232.080000	ChGt7x3RsUe1nOkp	10.0.0.5	54803	45.33.32.156	443	tcp	ssl	0.001831	140	480	SF	-	-	0	ShADadfFr	4	476	5	776	-
+1705278709.180000	CqMd6w4VrTf0yBhi	10.0.0.5	54804	45.33.32.156	443	tcp	ssl	0.001831	140	480	SF	-	-	0	ShADadfFr	4	476	5	776	-
+1705279185.500000	CpLc5v5UsWg9zCjn	10.0.0.5	54805	45.33.32.156	443	tcp	ssl	0.001831	140	480	SF	-	-	0	ShADadfFr	4	476	5	776	-
+#close 2024-01-14-20-52-25
