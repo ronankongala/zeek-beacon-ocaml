@@ -70,7 +70,7 @@ zeek-beacon-ocaml/
 │   ├── notebook2_dns_analysis.ipynb
 │   └── notebook3_beacon_intervals.ipynb
 ├── phase-6-report/
-│   └── CASE-18_Network_Forensics_Investigation_Report.pdf
+│   └── CASE-17_Network_Forensics_Investigation_Report.pdf
 ├── screenshots/
 │   ├── 01_zeek_rita_versions.png
 │   ├── 02_pcap_verified.png
@@ -212,7 +212,7 @@ Isolated all 11 connections to 85.239.53.219, computed inter-arrival intervals a
 
 Full PDF report mapping all findings to MITRE ATT&CK, with IOC table, Sigma detection rules, and network control recommendations.
 
-**[Read the report: CASE-18_Network_Forensics_Investigation_Report.pdf](phase-6-report/CASE-18_Network_Forensics_Investigation_Report.pdf)**
+**[Read the report: CASE-17_Network_Forensics_Investigation_Report.pdf](phase-6-report/CASE-17_Network_Forensics_Investigation_Report.pdf)**
 
 ---
 

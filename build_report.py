@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-CASE-18 investigation report generator.
+CASE-17 investigation report generator.
 
-Builds phase-6-report/CASE-18_Network_Forensics_Investigation_Report.pdf from the
+Builds phase-6-report/CASE-17_Network_Forensics_Investigation_Report.pdf from the
 values confirmed against the committed notebook outputs and screenshots.
 
 Usage:
@@ -47,7 +47,7 @@ SMB_BYTES = "30.9KB"
 
 OUT_DIR = "phase-6-report"
 OUT_PATH = os.path.join(
-    OUT_DIR, "CASE-18_Network_Forensics_Investigation_Report.pdf"
+    OUT_DIR, "CASE-17_Network_Forensics_Investigation_Report.pdf"
 )
 
 ACCENT = colors.HexColor("#1F3B57")
@@ -212,7 +212,7 @@ def footer(canvas, doc):
     canvas.drawString(
         0.75 * inch,
         0.5 * inch,
-        "CASE-18 | Ronan Kongala | MS Cybersecurity, Northeastern University",
+        "CASE-17 | Ronan Kongala | MS Cybersecurity, Northeastern University",
     )
     canvas.drawRightString(
         letter[0] - 0.75 * inch, 0.5 * inch, "Page %d" % doc.page
@@ -230,7 +230,7 @@ W = 7.0 * inch
 def story():
     s = []
 
-    s.append(Paragraph("CASE-18", TitleStyle))
+    s.append(Paragraph("CASE-17", TitleStyle))
     s.append(
         Paragraph(
             "Network Forensics Investigation Report<br/>"
@@ -254,7 +254,7 @@ def story():
                 ["Classification", "TLP:WHITE -- For Educational Use"],
                 [
                     "Repository",
-                    "github.com/ronankongala/zeek-network-forensics-lab",
+                    "github.com/ronankongala/zeek-beacon-ocaml",
                 ],
             ],
             [1.5 * inch, W - 1.5 * inch],
@@ -927,7 +927,7 @@ def story():
         "MITRE ATT&CK T1018: attack.mitre.org/techniques/T1018/",
         "RITA v5 Repository: github.com/activecm/rita",
         "Zeek Network Security Monitor: zeek.org",
-        "Lab Repository: github.com/ronankongala/zeek-network-forensics-lab",
+        "Lab Repository: github.com/ronankongala/zeek-beacon-ocaml",
     ]:
         s.append(Paragraph("- " + esc(ref), Body))
 
@@ -943,7 +943,7 @@ def main():
         rightMargin=0.75 * inch,
         topMargin=0.75 * inch,
         bottomMargin=0.75 * inch,
-        title="CASE-18 Network Forensics Investigation Report",
+        title="CASE-17 Network Forensics Investigation Report",
         author="Ronan Kongala",
         subject="SSLoad + Cobalt Strike C2 Beacon Analysis",
     )
