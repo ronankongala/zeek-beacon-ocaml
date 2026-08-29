@@ -6,18 +6,19 @@
 
 Reads a Zeek `conn.log`, groups connections by source IP, computes inter-arrival interval variance for each IP, and flags low-variance periodic senders as beacon candidates — the same signal RITA uses to identify C2 beaconing. Beacon candidates are shown first in the output, sorted by ascending variance (most suspicious first); all other scored IPs follow for context.
 
-```
-Loading sample_conn.log ...
-Parsed 16 connection rows
+![Detector output: 10.0.0.5 flagged as a beacon candidate at 477.1s mean interval, variance 1.84](docs/screenshots/01-detector-output.png)
 
-src_ip                verdict
-----------------------------------------------------------------------
-10.0.0.5              BEACON_CANDIDATE  interval=477.1s  var=1.84  conns=6
-10.1.2.3              HIGH_VARIANCE (var=890.39)
-172.16.0.42           HIGH_VARIANCE (var=312.11)
+Of the 16 parsed rows, 3 source IPs clear the 5-connection minimum and get scored.
+Only `10.0.0.5` lands under the 5.0 variance threshold, at 1.84.
 
-1 beacon candidate(s) from 3 scored IPs
-```
+### The signal it keys on
+
+`10.0.0.5` calls back to `45.33.32.156:443` six times, with gaps of 475.1s,
+479.1s, 477.9s, 477.1s and 476.3s -- a 477.1s mean with only 4.0s between the
+shortest and longest gap. The two noisy hosts sit at variance 890.39 and 312.11,
+178x and 62x above the 5.0 threshold.
+
+![Six callbacks from 10.0.0.5 to 45.33.32.156:443, spaced 475-479 seconds apart](docs/screenshots/02-beacon-intervals.png)
 
 ## Project structure
 
@@ -27,6 +28,7 @@ zeek-network-forensics-lab/
 ├── dune             ← build target
 ├── dune-project     ← dune version pin
 ├── sample_conn.log  ← synthetic Zeek log: one beacon, two noisy talkers
+├── docs/screenshots/← terminal captures used in this README
 └── README.md
 ```
 
