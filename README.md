@@ -1,10 +1,10 @@
-# CASE-18, Zeek Beacon Detector (OCaml)
+# CASE-18: Zeek Beacon Detector (OCaml)
 
-**CASE-17 ported to OCaml**, the same beacon-detection logic I built in Python using Zeek + RITA, reimplemented functionally to explore the differences between an imperative and a functional approach to the same problem.
+**CASE-17, ported to OCaml.** It reimplements the beacon-detection logic I built in Python with Zeek and RITA, so I could compare an imperative and a functional take on the same problem.
 
 ## What it does
 
-Reads a Zeek `conn.log`, groups connections by source IP, computes inter-arrival interval variance for each IP, and flags low-variance periodic senders as beacon candidates, the same signal RITA uses to identify C2 beaconing. Beacon candidates are shown first in the output, sorted by ascending variance (most suspicious first); all other scored IPs follow for context.
+Reads a Zeek `conn.log`, groups connections by source IP, computes inter-arrival interval variance for each IP, and flags low-variance periodic senders as beacon candidates. RITA keys on the same signal to find C2 beaconing. Beacon candidates are shown first in the output, sorted by ascending variance (most suspicious first); all other scored IPs follow for context.
 
 ![Detector output: 10.0.0.5 flagged as a beacon candidate at 477.1s mean interval, variance 1.84](docs/screenshots/03-beacon-output.png)
 
@@ -33,7 +33,7 @@ threshold.
 ## Project structure
 
 ```
-zeek-network-forensics-lab/
+zeek-beacon-ocaml/
 ├── beacon.ml        ← single-file implementation
 ├── dune             ← build target
 ├── dune-project     ← dune version pin
@@ -55,7 +55,7 @@ sudo apt-get install opam && opam init && eval $(opam env)
 
 # Install dune and build
 opam install dune
-cd zeek-network-forensics-lab
+cd zeek-beacon-ocaml
 dune build
 ```
 
@@ -101,8 +101,7 @@ Silent return, which is what a successful `dune build` looks like.
 ./_build/default/beacon.exe /path/to/conn.log
 ```
 
-Running against the real CASE-17 conn.log should flag the original C2 host with
-low variance, matching what RITA found, same logic, different language.
+I haven't run it against the CASE-17 conn.log yet (that log isn't committed in either repo), so the sample log is the only tested input.
 
 ## Pipeline
 
@@ -137,25 +136,25 @@ Parameters: `min_conns = 5` (minimum hits required to score an IP),
 The `beacon_verdict` variant type makes it impossible to have a "not yet scored"
 IP reach the output printer. In Python, I had a separate sentinel value and an
 `assert` to catch cases where scoring was skipped. In OCaml, the type system
-makes that state structurally unrepresentable, the printer receives a
-`beacon_verdict`, which by construction is one of the three cases, always.
+makes that state unrepresentable. The printer only ever receives a
+`beacon_verdict`, and that is always one of the three cases.
 
 ### What was hard
 
 Getting inter-arrival intervals right without mutation. The Python version just
 sorted a list in-place and iterated with an index. In OCaml, I wrote a recursive
-function that consumes the list pairwise, cleaner once I had it, but the mental
-model took a few iterations.
+function that consumes the list pairwise. It reads cleaner than the Python, but it
+took me a few tries to get right.
 
 ### What I'd do next
 
 - Add a `-port` filter flag to restrict scoring to a specific destination port
 - Stream rather than loading the whole file into memory first
-- For very large logs (multi-GB), swap `Map.Make` for `Hashtbl`, O(log k) vs
-  O(1) amortized per lookup matters at scale
+- For multi-GB logs, swap `Map.Make` for `Hashtbl`. At that size, O(1) amortized
+  lookups beat O(log k).
 
 ## Relation to portfolio
 
-- **CASE-17** (Python): [zeek-beacon-ocaml](https://github.com/ronankongala/zeek-beacon-ocaml), original investigation on a real 6.4MB SSLoad + Cobalt Strike PCAP
+- **CASE-17** (Python): [zeek-network-forensics-lab](https://github.com/ronankongala/zeek-network-forensics-lab), the original investigation on a 6.4MB SSLoad + Cobalt Strike PCAP
 - **CASE-18** (this repo): functional rewrite of the core beacon-scoring logic in OCaml
 - **Full portfolio**: [ronankongala.github.io](https://ronankongala.github.io)
